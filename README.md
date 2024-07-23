@@ -53,13 +53,15 @@ The FastAPI Booking System is a comprehensive application designed to streamline
 
 - Let's retrieve all users in database by api "/user/retrieve_all_users/".
 
+- Now scroll down and find "/booking/create_booking/" and create your booking.
+
 - Let's retrieve all bookings of the user by api "/user/retrieve/active/bookings/".
 
 - Let's retrieve booking history of the user by api "/user/calendar/history/bookings/".
 
 - Let's retrieve upcoming bookings of the user by api "/user/calendar/upcoming/bookings/".
 
-- Now scroll down and find "/booking/create_booking/" and create your booking.
+- Copy any booking id and use it for modify or cancel the booking. 
 
 - "/booking/modify_booking/{booking_id}/" for modify the booking.
 

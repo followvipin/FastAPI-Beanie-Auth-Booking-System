@@ -26,6 +26,10 @@ async def add_new_booking(
     booking: Booking = Body(...),
     credentials: HTTPBasicCredentials = Depends(token_listener),
 ):
+    """
+    JWT Authentication required to access this endpoint.
+    This endpoint is for creating a booking.
+    """
     payload = decode_jwt(credentials)
     username = payload["user_id"]
     try:
@@ -114,9 +118,6 @@ async def add_new_booking(
         print(e)
     
     
-    
-
-
 # Endpoint to retrieve all users, accessible only to authenticated users via JWT token verification.
 @router.put("/modify_booking/{booking_id}/", dependencies=[Depends(token_listener)])
 async def update_booking(
@@ -124,6 +125,16 @@ async def update_booking(
     credentials: HTTPBasicCredentials = Depends(token_listener),
     modifications: UpdateBooking = Body(...),
 ):
+    """
+    JWT Authentication required to access this endpoint.
+    This endpoint modify the booking.
+    
+    args:
+        "booking_id" the document id of a particular booking.
+
+    return:
+        The modified booking data.
+    """
     payload = decode_jwt(credentials)
     username = payload["user_id"]
     try:
@@ -164,6 +175,16 @@ async def cancle_booking(
     booking_id: PydanticObjectId,
     credentials: HTTPBasicCredentials = Depends(token_listener),
 ):
+    """
+    JWT Authentication required to access this endpoint.
+    This endpoint cancels the booking.
+    
+    args:
+        "booking_id" the document id of a particular booking.
+
+    return:
+        The canceled booking data.
+    """
     payload = decode_jwt(credentials)
     username = payload["user_id"]
     try:
