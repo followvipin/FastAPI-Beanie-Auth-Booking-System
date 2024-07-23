@@ -9,6 +9,7 @@ The FastAPI Booking System is a comprehensive application designed to streamline
 - FastAPI
 - Uvicorn
 - Pydantic v2
+- MongoDB installed in the system
 
 ### Installation
 
@@ -33,3 +34,35 @@ The FastAPI Booking System is a comprehensive application designed to streamline
     ```sh
     python3 -m uvicorn app:app --reload --host 0.0.0.0 --port 8000
     ```
+
+### Documentation
+
+- Open SwaggerUi by this url http://localhost:8000/docs in the browser.
+
+- Create an account by "/user/signup/" api.
+
+- Now login by "/user/signup/" api.
+
+- Copy the returned token string.
+
+- Scroll to the top of the swagger and find a lock icon.
+
+- Now click on the lock icon paste the token into the field and log in.
+
+- Now you are authenticated for 24 hours.
+
+- Let's retrieve all users in database by api "/user/retrieve_all_users/".
+
+- Let's retrieve all bookings of the user by api "/user/retrieve/active/bookings/".
+
+- Let's retrieve booking history of the user by api "/user/calendar/history/bookings/".
+
+- Let's retrieve upcoming bookings of the user by api "/user/calendar/upcoming/bookings/".
+
+- Now scroll down and find "/booking/create_booking/" and create your booking.
+
+- "/booking/modify_booking/{booking_id}/" for modify the booking.
+
+- "/booking/cancle_booking/{booking_id}/" for cancle the booking.
+
+# Thank You!

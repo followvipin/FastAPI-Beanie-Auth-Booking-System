@@ -1,6 +1,6 @@
 # let's import some specific attribute, function  & class from required package and module
 from typing import Dict
-from auth.firebase import get_current_user
+# from auth.firebase import get_current_user
 from routes.user import *
 from database.user import *
 from database.booking import (
@@ -74,6 +74,12 @@ async def user_signup(response: Response, user: User = Body(...)):
 # Endpoint for user login, authenticating credentials and returning a JWT if successful.
 @router.post("/login")
 async def user_login(user_credentials: UserSignIn = Body(...)):
+    """
+    Handles user login by providing username and password.
+
+    Returns:
+        Token for authentication.
+    """
     user_exists = await User.find_one(User.username == user_credentials.username)
     if user_exists:
         password = user_credentials.password
@@ -89,6 +95,12 @@ async def user_login(user_credentials: UserSignIn = Body(...)):
 # Endpoint to retrieve all users, accessible only to authenticated users via JWT token verification.
 @router.get("/retrieve_all_users/", dependencies=[Depends(token_listener)])
 async def get_all_users(credentials: HTTPBasicCredentials = Depends(token_listener)):
+    """
+    JWT Authentication required to access this endpoint.
+    
+    Returns:
+        All the existing users in the database.
+    """
     payload = decode_jwt(credentials)
     username = payload["user_id"]
     try:
@@ -113,6 +125,12 @@ async def get_all_users(credentials: HTTPBasicCredentials = Depends(token_listen
 # Endpoint to retrieve all users, accessible only to authenticated users via JWT token verification.
 @router.get("/retrieve/active/bookings/", dependencies=[Depends(token_listener)])
 async def get_my_bookings(credentials: HTTPBasicCredentials = Depends(token_listener)):
+    """
+    JWT Authentication required to access this endpoint.
+    
+    Returns:
+        All the existing bookings of the user.
+    """
     payload = decode_jwt(credentials)
     username = payload["user_id"]
     try:
@@ -140,6 +158,12 @@ async def get_my_bookings(credentials: HTTPBasicCredentials = Depends(token_list
 async def get_booking_history(
     credentials: HTTPBasicCredentials = Depends(token_listener),
 ):
+    """
+    JWT Authentication required to access this endpoint.
+    
+    Returns:
+        All the past bookings bookings of the user.
+    """
     payload = decode_jwt(credentials)
     username = payload["user_id"]
     try:
@@ -167,6 +191,12 @@ async def get_booking_history(
 async def get_upcoming_bookings(
     credentials: HTTPBasicCredentials = Depends(token_listener),
 ):
+    """
+    JWT Authentication required to access this endpoint.
+    
+    Returns:
+        All the active (not canceled) upcoming bookings of the user.
+    """
     payload = decode_jwt(credentials)
     username = payload["user_id"]
     try:

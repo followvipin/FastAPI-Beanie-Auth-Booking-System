@@ -62,7 +62,7 @@ async def validate_booking(booking_time: datetime) -> Union[Booking, None]:
 async def retrieve_bookings(bookings: list) -> List[Booking]:
     try:
         my_bookings = (
-            await booking_collection.find({"_id": {"$in": bookings}, "canceled": False})
+            await booking_collection.find({"_id": {"$in": bookings}})
             .sort("-created_at")
             .to_list()
         )
@@ -78,7 +78,7 @@ async def retrieve_booking_history(bookings: list) -> List[Booking]:
         my_bookings = (
             await booking_collection.find(
                 {"_id": {"$in": bookings}, "booking_time": {"$lte": current_time}},
-                projection_model=CalenderView,
+                projection_model=CalendarView,
             )
             .sort("-booking_time")
             .to_list()
@@ -99,7 +99,7 @@ async def retrieve_upcoming_bookings(bookings: list) -> List[Booking]:
                     "canceled": False,
                     "booking_time": {"$gt": current_time},
                 },
-                projection_model=CalenderView,
+                projection_model=CalendarView,
             )
             .sort("booking_time")
             .to_list()
