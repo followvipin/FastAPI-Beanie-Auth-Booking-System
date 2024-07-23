@@ -29,8 +29,7 @@ This repository contains a comprehensive project demonstrating the creation of a
     pip install -r requirements.txt
     ```
 
-### Running the Application
-    To run the application, use the following command:
-        ```sh
-        python3 -m uvicorn app:app --reload --host 0.0.0.0 --port 8000
-        ```
+### Running the Application. To run the application, use the following command:
+    ```sh
+    python3 -m uvicorn app:app --reload --host 0.0.0.0 --port 8000
+    ```
