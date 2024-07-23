@@ -1,72 +1,57 @@
 # let's import some specific attribute, function  & class from required package and module
-from datetime import datetime
+from typing import Dict
+from auth.firebase import get_current_user
 from routes.user import *
 from database.user import *
-from beanie import PydanticObjectId
-from fastapi import (
-    APIRouter,
-    Request,
-    Response
+from database.booking import (
+    retrieve_bookings,
+    retrieve_booking_history,
+    retrieve_upcoming_bookings,
 )
+from beanie import PydanticObjectId
+from fastapi import Body, APIRouter, Response, HTTPException
+from auth.jwt_bearer import JWTBearer
+from auth.jwt_handler import sign_jwt, decode_jwt
 from fastapi.responses import JSONResponse
 from fastapi import Depends
-from models.user import User
+from models.user import *
 from fastapi.encoders import jsonable_encoder
 import motor.motor_asyncio
 from config.config import Settings
 from pymongo.server_api import ServerApi
 
 router = APIRouter()
+token_listener = JWTBearer()
 
-@router.post("/signup")
-async def user_signup(request: Request, response: Response):
+
+@router.post("/signup/")
+async def user_signup(response: Response, user: User = Body(...)):
     """
     Handles user signup by creating a new user if they do not already exist.
 
     Args:
-        request (Request): The incoming request object containing user data payload.
+        Body: The incoming request object containing user data payload.
         response (Response): The response object used to send back the result.
 
     Returns:
         JSONResponse: A JSON response indicating the result of the signup attempt.
     """
-    # Parse the incoming JSON request body into a Python dictionary
-    user = await request.json()
-    
-    # Convert the user data to a format suitable for encoding
-    data = jsonable_encoder(user)
-    
     # Extract the username from the user data
-    username = data["username"]
-    
-    # Check if a user with the same username already exists in the collection
-    user_exists = await user_collection.find_one(
-        user_collection.username == username
-    )
-    
-    if user_exists is None:
-        # Extract additional user information from the data
-        email = data["email"]
-        dob = data["dob"]
-        gender = data["gender"]
+    username = user.username
 
-        # Create a dictionary representing the new user to be added
-        user_dict: User = {
-            "username": username,
-            "email": email,
-            "dob": dob,
-            "gender": gender,
-            "created_at": datetime.now(),
-        }
+    # Check if a user with the same username already exists in the collection
+    user_exists = await user_collection.find_one(user_collection.username == username)
+
+    if user_exists is None:
 
         try:
             # Attempt to add the new user to the database
-            await add_user(user_dict)
-            
+            await add_new_user(user)
+
             # Prepare the response data for a successful signup
             response_data = {
                 "status_code": "200",
-                "message": "User created successfully!"
+                "message": "User created successfully!",
             }
 
             # Create and return a JSON response with the success message
@@ -79,23 +64,150 @@ async def user_signup(request: Request, response: Response):
 
     else:
         # Prepare the response data indicating that the user already exists
-        response_data = {
-            "status_code": "409",
-            "message": "User already exists!"
-        }
+        response_data = {"status_code": "409", "message": "User already exists!"}
 
         # Create and return a JSON response with the conflict message
         response = JSONResponse(content=response_data)
         return response
 
-@router.get("/retrieve_all_users/")
-async def get_all_users():
+
+# Endpoint for user login, authenticating credentials and returning a JWT if successful.
+@router.post("/login")
+async def user_login(user_credentials: UserSignIn = Body(...)):
+    user_exists = await User.find_one(User.username == user_credentials.username)
+    if user_exists:
+        password = user_credentials.password
+        if password:
+            return sign_jwt(user_credentials.username)
+
+        raise HTTPException(status_code=403, detail="Incorrect email or password")
+
+    raise HTTPException(status_code=403, detail="Incorrect email or password")
+
+
+
+# Endpoint to retrieve all users, accessible only to authenticated users via JWT token verification.
+@router.get("/retrieve_all_users/", dependencies=[Depends(token_listener)])
+async def get_all_users(credentials: HTTPBasicCredentials = Depends(token_listener)):
+    payload = decode_jwt(credentials)
+    username = payload["user_id"]
     try:
-        all_users = await retrieve_all_users()
-        return {
-            "status_code":200,
-            "message":"all users are retrieved successfully!",
-            "all_user": all_users
-        }
+        user_exists = await user_collection.find_one(
+            user_collection.username == username
+        )
+        if user_exists:
+            print("Welcome back!", username)
+            try:
+                all_users = await retrieve_all_users()
+                return {
+                    "status_code": 200,
+                    "message": "all users are retrieved successfully!",
+                    "all_user": all_users,
+                }
+            except Exception as e:
+                print(e)
     except Exception as e:
         print(e)
+
+
+# Endpoint to retrieve all users, accessible only to authenticated users via JWT token verification.
+@router.get("/retrieve/active/bookings/", dependencies=[Depends(token_listener)])
+async def get_my_bookings(credentials: HTTPBasicCredentials = Depends(token_listener)):
+    payload = decode_jwt(credentials)
+    username = payload["user_id"]
+    try:
+        user_exists = await user_collection.find_one(
+            user_collection.username == username
+        )
+        my_bookings = user_exists.bookings
+        if user_exists:
+            print("Welcome back!", username)
+            try:
+                my_bookings = await retrieve_bookings(my_bookings)
+                return {
+                    "status_code": 200,
+                    "message": "all users are retrieved successfully!",
+                    "all_user": my_bookings,
+                }
+            except Exception as e:
+                print(e)
+    except Exception as e:
+        print(e)
+
+
+# Endpoint to retrieve user's booking past history with calender view projection model.
+@router.get("/calendar/history/bookings/", dependencies=[Depends(token_listener)])
+async def get_booking_history(
+    credentials: HTTPBasicCredentials = Depends(token_listener),
+):
+    payload = decode_jwt(credentials)
+    username = payload["user_id"]
+    try:
+        user_exists = await user_collection.find_one(
+            user_collection.username == username
+        )
+        my_bookings = user_exists.bookings
+        if user_exists:
+            print("Welcome back!", username)
+            try:
+                my_bookings = await retrieve_booking_history(my_bookings)
+                return {
+                    "status_code": 200,
+                    "message": "all users are retrieved successfully!",
+                    "all_user": my_bookings,
+                }
+            except Exception as e:
+                print(e)
+    except Exception as e:
+        print(e)
+
+
+# Endpoint to retrieve user's upcoming bookings with calender view projection model.
+@router.get("/calendar/upcoming/bookings/", dependencies=[Depends(token_listener)])
+async def get_upcoming_bookings(
+    credentials: HTTPBasicCredentials = Depends(token_listener),
+):
+    payload = decode_jwt(credentials)
+    username = payload["user_id"]
+    try:
+        user_exists = await user_collection.find_one(
+            user_collection.username == username
+        )
+        my_bookings = user_exists.bookings
+        if user_exists:
+            print("Welcome back!", username)
+            try:
+                my_bookings = await retrieve_upcoming_bookings(my_bookings)
+                return {
+                    "status_code": 200,
+                    "message": "Upcoming bookings retrieved successfully!",
+                    "Upcoming_Booking": my_bookings,
+                }
+            except Exception as e:
+                print(e)
+    except Exception as e:
+        print(e)
+
+
+"""#Endpoint for adding a firebase id to the user document.
+   #Endpoint can only be used for firebase google authentication purpose.
+
+@router.get("/add/firebaseid/")
+async def add_friebaseid(credentials: HTTPBasicCredentials = Depends(token_listener),current_user: Dict = Depends(get_current_user)):
+    payload = decode_jwt(credentials)
+    username = payload["user_id"]
+    firebase_id = current_user.get("user_id")
+    try:
+        user_exists = await user_collection.find_one(
+            user_collection.username == username
+        )
+        if user_exists:
+            print("Welcome back!", username)
+        uid=user_exists.id
+        try:
+            await update_user_data(uid, {"firebase":firebase_id})
+        except Exception as e:
+            print(e)
+
+    except Exception as e:
+            print(e)"""

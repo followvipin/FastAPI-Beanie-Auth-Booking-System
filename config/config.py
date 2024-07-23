@@ -4,6 +4,7 @@ from beanie import init_beanie
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic_settings import BaseSettings
 from models.user import User
+from models.booking import Booking
 from urllib.parse import quote_plus
 from pymongo.server_api import ServerApi
 
@@ -25,9 +26,13 @@ class Settings(BaseSettings):
     #     + "mongo_username.hprvpha.mongodb.net/?retryWrites=true&w=majority"
     # )
 
+    # for localhost use connection string "mongodb://localhost:27017"
     DATABASE_URL: Optional[str] = ("mongodb://localhost:27017")
 
-    # for localhost use connection string "mongodb://localhost:27017"
+    
+    # JWT fro authentication purpose
+    secret_key: str = "62a707a32f174a25acb892cd"
+    algorithm: str = "HS256"
 
     class Config:
         env_file = ".env.dev"
@@ -38,8 +43,8 @@ class Settings(BaseSettings):
 async def initiate_database():
     try:
         client = AsyncIOMotorClient(Settings().DATABASE_URL, server_api=ServerApi("1"))
-        database = client["mongo_db"]
-        await init_beanie(database, document_models=[User])
+        database = client["booking_system"]
+        await init_beanie(database, document_models=[User,Booking])
         print("Pinged your database deployment. You successfully connected to MongoDB!")
 
     except Exception as e:
