@@ -1,5 +1,5 @@
 # FastAPI-Beanie-Auth-Booking-System
-This repository contains a comprehensive project demonstrating the creation of a web application using FastAPI, Beanie ORM, and MongoDB. The project is divided into three parts, each progressively increasing in complexity.
+The FastAPI Booking System is a comprehensive application designed to streamline booking processes with robust authentication and advanced booking features. The project integrates Google sign-in alongside the existing JWT authentication, providing users with flexible authentication options. Users can authenticate using either Google sign-in or traditional JWT methods and obtain a JWT token for secure access.
 
 ## Getting Started
 
